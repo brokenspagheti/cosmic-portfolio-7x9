@@ -37,6 +37,167 @@
             pointer-events: none;
         }
 
+        #astronaut-container {
+            position: fixed;
+            width: 120px;
+            height: 120px;
+            z-index: 999;
+            cursor: grab;
+            transition: transform 0.3s ease;
+            pointer-events: auto;
+        }
+
+        #astronaut-container:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        .astronaut {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .astronaut-body {
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #f1f5f9, #cbd5e1);
+            border-radius: 20px;
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .astronaut-helmet {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3));
+            border-radius: 50%;
+            position: absolute;
+            top: 10px;
+            left: 35px;
+            border: 3px solid #6366f1;
+            backdrop-filter: blur(10px);
+        }
+
+        .astronaut-visor {
+            width: 30px;
+            height: 20px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 50%;
+            position: absolute;
+            top: 15px;
+            left: 10px;
+            opacity: 0.8;
+        }
+
+        .astronaut-arm-left,
+        .astronaut-arm-right {
+            width: 15px;
+            height: 40px;
+            background: linear-gradient(135deg, #f1f5f9, #cbd5e1);
+            border-radius: 10px;
+            position: absolute;
+            top: 40px;
+        }
+
+        .astronaut-arm-left {
+            left: 20px;
+            transform: rotate(-20deg);
+        }
+
+        .astronaut-arm-right {
+            right: 20px;
+            transform: rotate(20deg);
+        }
+
+        .astronaut-leg-left,
+        .astronaut-leg-right {
+            width: 18px;
+            height: 35px;
+            background: linear-gradient(135deg, #f1f5f9, #cbd5e1);
+            border-radius: 10px;
+            position: absolute;
+            top: 100px;
+        }
+
+        .astronaut-leg-left {
+            left: 35px;
+        }
+
+        .astronaut-leg-right {
+            right: 35px;
+        }
+
+        .jetpack {
+            width: 40px;
+            height: 50px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 10px;
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            z-index: -1;
+        }
+
+        .jetpack-flame {
+            width: 8px;
+            height: 20px;
+            background: linear-gradient(180deg, #f59e0b, #ef4444);
+            border-radius: 50%;
+            position: absolute;
+            bottom: -15px;
+            animation: flicker 0.2s infinite;
+        }
+
+        .jetpack-flame.left {
+            left: 8px;
+        }
+
+        .jetpack-flame.right {
+            right: 8px;
+        }
+
+        .trail {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.8), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 998;
+            animation: fadeTrail 1s forwards;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-10px) rotate(5deg);
+            }
+        }
+
+        @keyframes flicker {
+            0%, 100% {
+                opacity: 1;
+                transform: scaleY(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scaleY(1.2);
+            }
+        }
+
+        @keyframes fadeTrail {
+            to {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+        }
+
         .content-wrapper {
             position: relative;
             z-index: 2;
@@ -282,6 +443,24 @@
     <div id="canvas-container"></div>
     <canvas id="whirlpool-canvas"></canvas>
     
+    <!-- Interactive Astronaut -->
+    <div id="astronaut-container">
+        <div class="astronaut">
+            <div class="astronaut-helmet">
+                <div class="astronaut-visor"></div>
+            </div>
+            <div class="astronaut-body"></div>
+            <div class="astronaut-arm-left"></div>
+            <div class="astronaut-arm-right"></div>
+            <div class="astronaut-leg-left"></div>
+            <div class="astronaut-leg-right"></div>
+            <div class="jetpack">
+                <div class="jetpack-flame left"></div>
+                <div class="jetpack-flame right"></div>
+            </div>
+        </div>
+    </div>
+    
     <div class="content-wrapper">
         <nav class="navbar">
             <div class="logo">nikhil<span>XD</span></div>
@@ -380,6 +559,85 @@
             });
         });
 
+        // Interactive Astronaut
+        const astronaut = document.getElementById('astronaut-container');
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = window.innerWidth / 2 - 60;
+        let yOffset = window.innerHeight / 2 - 60;
+
+        astronaut.style.left = xOffset + 'px';
+        astronaut.style.top = yOffset + 'px';
+
+        function dragStart(e) {
+            if (e.type === "touchstart") {
+                initialX = e.touches[0].clientX - xOffset;
+                initialY = e.touches[0].clientY - yOffset;
+            } else {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+            }
+
+            if (e.target === astronaut || astronaut.contains(e.target)) {
+                isDragging = true;
+            }
+        }
+
+        function dragEnd(e) {
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                
+                if (e.type === "touchmove") {
+                    currentX = e.touches[0].clientX - initialX;
+                    currentY = e.touches[0].clientY - initialY;
+                } else {
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                }
+
+                xOffset = currentX;
+                yOffset = currentY;
+
+                setTranslate(currentX, currentY, astronaut);
+                
+                // Create trail
+                createTrail(currentX + 60, currentY + 60);
+            }
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            el.style.left = xPos + "px";
+            el.style.top = yPos + "px";
+        }
+
+        function createTrail(x, y) {
+            const trail = document.createElement('div');
+            trail.className = 'trail';
+            trail.style.left = x + 'px';
+            trail.style.top = y + 'px';
+            document.body.appendChild(trail);
+            
+            setTimeout(() => {
+                trail.remove();
+            }, 1000);
+        }
+
+        astronaut.addEventListener("mousedown", dragStart);
+        astronaut.addEventListener("mouseup", dragEnd);
+        astronaut.addEventListener("mousemove", drag);
+        astronaut.addEventListener("touchstart", dragStart);
+        astronaut.addEventListener("touchend", dragEnd);
+        astronaut.addEventListener("touchmove", drag);
+
         // Parallax Effect
         const parallaxLayers = document.querySelectorAll('.parallax-layer');
         
@@ -454,7 +712,6 @@
                 whirlCtx.translate(this.x, this.y);
                 whirlCtx.rotate(this.rotation);
                 
-                // Draw spiral
                 whirlCtx.beginPath();
                 for(let i = 0; i < 360; i += 10) {
                     const angle = (i * Math.PI) / 180;
@@ -473,7 +730,6 @@
                 whirlCtx.lineWidth = 2;
                 whirlCtx.stroke();
                 
-                // Draw particles
                 this.particles.forEach(p => {
                     const x = Math.cos(p.angle) * p.distance;
                     const y = Math.sin(p.angle) * p.distance;
@@ -493,9 +749,11 @@
         let lastMouseY = 0;
 
         document.addEventListener('mousedown', (e) => {
-            isMouseDown = true;
-            lastMouseX = e.clientX;
-            lastMouseY = e.clientY;
+            if (!isDragging) {
+                isMouseDown = true;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            }
         });
 
         document.addEventListener('mouseup', () => {
@@ -503,7 +761,7 @@
         });
 
         document.addEventListener('mousemove', (e) => {
-            if(isMouseDown) {
+            if(isMouseDown && !isDragging) {
                 const dx = e.clientX - lastMouseX;
                 const dy = e.clientY - lastMouseY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -611,22 +869,18 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            // Rotate particles
             particlesMesh.rotation.y += 0.001;
             particlesMesh.rotation.x += 0.0005;
 
-            // Rotate shapes
             torus.rotation.x += 0.01;
             torus.rotation.y += 0.005;
             
             sphere.rotation.x += 0.005;
             sphere.rotation.y += 0.01;
 
-            // Mouse interaction
             camera.position.x += (mouseX * 5 - camera.position.x) * 0.05;
             camera.position.y += (mouseY * 5 - camera.position.y) * 0.05;
 
-            // Scroll effect
             camera.position.y = scrollY * 0.01;
 
             renderer.render(scene, camera);
